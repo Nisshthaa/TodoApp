@@ -27,6 +27,7 @@ func main() {
 
 	router.Route("/v1", func(v1 chi.Router) {
 		v1.Post("/register", handlers.RegisterUser)
+		v1.Post("/login", handlers.LoginUser)
 
 	})
 

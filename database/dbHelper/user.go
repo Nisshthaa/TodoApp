@@ -2,6 +2,8 @@ package dbHelper
 
 import (
 	"github.com/yourusername/my-project/database"
+	"github.com/yourusername/my-project/models"
+	"github.com/yourusername/my-project/utils"
 )
 
 func IsUserExists(email string) (bool, error) {
@@ -28,4 +30,21 @@ func CreateUserSession(userID string) (string, error) {
               VALUES ($1) RETURNING id`
 	err := database.Todo.Get(&sessionID, SQL, userID)
 	return sessionID, err
+}
+
+func AuthenticateUser(email, password string) (string, error) {
+	SQL := `SELECT id,
+       			   password
+			  FROM users 
+			  WHERE email = TRIM($1)
+			    AND archived_at IS NULL`
+
+	var user models.LoginData
+	if err := database.Todo.Get(&user, SQL, email); err != nil {
+		return "", err
+	}
+	if passwordErr := utils.CheckPassword(password, user.PasswordHash); passwordErr != nil {
+		return "", passwordErr
+	}
+	return user.ID, nil
 }
