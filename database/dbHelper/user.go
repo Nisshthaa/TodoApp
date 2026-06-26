@@ -1,6 +1,8 @@
 package dbHelper
 
-import "github.com/yourusername/my-project/database"
+import (
+	"github.com/yourusername/my-project/database"
+)
 
 func IsUserExists(email string) (bool, error) {
 	SQL := `SELECT count(id) > 0 as is_exist
@@ -8,9 +10,9 @@ func IsUserExists(email string) (bool, error) {
 			  WHERE email = TRIM($1)
 			    AND archived_at IS NULL`
 
-	var check bool
-	chkErr := database.Todo.Get(&check, SQL, email)
-	return check, chkErr
+	var exist bool
+	err := database.Todo.Get(&exist, SQL, email)
+	return exist, err
 }
 
 func CreateUser(name, email, password string) error {
@@ -18,4 +20,12 @@ func CreateUser(name, email, password string) error {
 			VALUES (TRIM($1),TRIM($2),$3)`
 	_, err := database.Todo.Exec(SQL, name, email, password)
 	return err
+}
+
+func CreateUserSession(userID string) (string, error) {
+	var sessionID string
+	SQL := `INSERT INTO user_session(user_id) 
+              VALUES ($1) RETURNING id`
+	err := database.Todo.Get(&sessionID, SQL, userID)
+	return sessionID, err
 }
