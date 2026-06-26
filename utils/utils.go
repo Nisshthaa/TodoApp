@@ -1,1 +1,54 @@
 package utils
+
+import (
+	"encoding/json"
+	"log"
+	"net/http"
+
+	"github.com/yourusername/my-project/models"
+	"golang.org/x/crypto/bcrypt"
+)
+
+type ErrorResponse struct {
+	Error   string `json:"error"`
+	Message string `json:"message,omitempty"`
+}
+
+func ParseBody(r *http.Request, v interface{}) error {
+	return json.NewDecoder(r.Body).Decode(v)
+}
+
+func EncodeJSONBody(w http.ResponseWriter, v interface{}) error {
+	return json.NewEncoder(w).Encode(v)
+}
+
+func RespondJSON(w http.ResponseWriter, statusCode int, body interface{}) {
+	w.WriteHeader(statusCode)
+	if body != nil {
+		if err := EncodeJSONBody(w, body); err != nil {
+			log.Printf("Failed to respond JSON with error: %+v", err)
+		}
+	}
+}
+
+func newClientError(err error, statusCode int, messageToUser string) *models.ClientError {
+	return &models.ClientError{
+		MessageToUser: messageToUser,
+		Err:           err.Error(),
+		StatusCode:    statusCode,
+	}
+}
+
+func RespondError(w http.ResponseWriter, statusCode int, err error, messageToUser string) {
+	log.Printf("status: %d, message: %s, err: %+v ", statusCode, messageToUser, err)
+	clientError := newClientError(err, statusCode, messageToUser)
+	w.WriteHeader(statusCode)
+	if err := json.NewEncoder(w).Encode(clientError); err != nil {
+		log.Printf("status: %d, message: %s, err: %+v ", statusCode, messageToUser, err)
+	}
+}
+
+func HashPassword(password string) (string, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(hashedPassword), err
+}
