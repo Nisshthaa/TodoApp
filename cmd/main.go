@@ -40,6 +40,7 @@ func main() {
 
 			r.Route("/todo", func(todo chi.Router) {
 				todo.Post("/", handlers.CreateTodo)
+				todo.Get("/", handlers.GetAllTodos)
 
 			})
 		})

@@ -32,3 +32,18 @@ func CreateTodo(body models.TodoRequest) error {
 	_, err := database.Todo.Exec(SQL, args...)
 	return err
 }
+
+func GetAllTodos(userID, keyword, completed string) ([]models.Todo, error) {
+	SQL := `SELECT id, user_id, title, description, is_completed
+				FROM todos
+				WHERE user_id = $1
+				  AND (
+					$2 = '' OR (title ILIKE '%' || $2 || '%' OR description ILIKE '%' || $2 || '%')
+					)
+				  AND ($3 = '' OR is_completed = CAST($3 AS BOOLEAN))
+				  AND archived_at IS NULL`
+
+	todos := make([]models.Todo, 0)
+	getErr := database.Todo.Select(&todos, SQL, userID, keyword, completed)
+	return todos, getErr
+}

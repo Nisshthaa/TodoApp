@@ -38,3 +38,19 @@ func CreateTodo(w http.ResponseWriter, r *http.Request) {
 		Message string `json:"message"`
 	}{"Todo created successfully"})
 }
+
+func GetAllTodos(w http.ResponseWriter, r *http.Request) {
+	keyword := r.URL.Query().Get("keyword")
+	completed := r.URL.Query().Get("completed")
+
+	userCtx := middlewares.UserContext(r)
+	userID := userCtx.UserID
+
+	todos, getErr := dbHelper.GetAllTodos(userID, keyword, completed)
+	if getErr != nil {
+		utils.RespondError(w, http.StatusInternalServerError, getErr, "failed to get todos")
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, todos)
+}
