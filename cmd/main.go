@@ -35,6 +35,7 @@ func main() {
 
 			r.Route("/user", func(user chi.Router) {
 				user.Get("/", handlers.GetUser)
+				user.Post("/logout", handlers.LogoutUser)
 			})
 		})
 

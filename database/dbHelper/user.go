@@ -72,3 +72,13 @@ func GetUser(userID string) (models.User, error) {
 	err := database.Todo.Get(&user, SQL, userID)
 	return user, err
 }
+
+func DeleteUserSession(sessionID string) error {
+	SQL := `UPDATE user_session
+			  SET archived_at = NOW()
+			  WHERE id = $1
+			    AND archived_at IS NULL`
+
+	_, err := database.Todo.Exec(SQL, sessionID)
+	return err
+}

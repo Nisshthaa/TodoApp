@@ -92,3 +92,17 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 	utils.RespondJSON(w, http.StatusOK, user)
 }
+
+func LogoutUser(w http.ResponseWriter, r *http.Request) {
+	userCtx := middlewares.UserContext(r)
+	sessionID := userCtx.SessionID
+
+	if err := dbHelper.DeleteUserSession(sessionID); err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err, "failed to delete user session")
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, struct {
+		Message string `json:"message"`
+	}{"logout successful"})
+}
