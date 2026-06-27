@@ -31,5 +31,3 @@ func OpenConnection(host, port, databaseName, user, password string) error {
 	Todo = db
 	return nil
 }
-
-// db close

@@ -37,6 +37,11 @@ func main() {
 				user.Get("/", handlers.GetUser)
 				user.Post("/logout", handlers.LogoutUser)
 			})
+
+			r.Route("/todo", func(todo chi.Router) {
+				todo.Post("/", handlers.CreateTodo)
+
+			})
 		})
 
 	})
