@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/yourusername/my-project/database/dbHelper"
 	"github.com/yourusername/my-project/middlewares"
 	"github.com/yourusername/my-project/models"
@@ -53,4 +54,20 @@ func GetAllTodos(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.RespondJSON(w, http.StatusOK, todos)
+}
+
+func MarkCompleted(w http.ResponseWriter, r *http.Request) {
+	todoID := chi.URLParam(r, "todoId")
+
+	userCtx := middlewares.UserContext(r)
+	userID := userCtx.UserID
+
+	if err := dbHelper.MarkTodoAsCompleted(todoID, userID); err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err, "failed to mark todo as completed")
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, struct {
+		Message string `json:"message"`
+	}{"todo marked as completed successfully"})
 }

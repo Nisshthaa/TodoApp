@@ -47,3 +47,14 @@ func GetAllTodos(userID, keyword, completed string) ([]models.Todo, error) {
 	getErr := database.Todo.Select(&todos, SQL, userID, keyword, completed)
 	return todos, getErr
 }
+
+func MarkTodoAsCompleted(todoID, userID string) error {
+	SQL := `UPDATE todos	
+              SET is_completed = true        
+              WHERE id = $1                  
+                AND user_id = $2             
+                AND archived_at IS NULL`
+
+	_, err := database.Todo.Exec(SQL, todoID, userID)
+	return err
+}
