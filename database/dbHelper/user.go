@@ -1,6 +1,8 @@
 package dbHelper
 
 import (
+	"time"
+
 	"github.com/yourusername/my-project/database"
 	"github.com/yourusername/my-project/models"
 	"github.com/yourusername/my-project/utils"
@@ -47,4 +49,26 @@ func AuthenticateUser(email, password string) (string, error) {
 		return "", passwordErr
 	}
 	return user.ID, nil
+}
+
+func GetArchivedAt(sessionID string) (*time.Time, error) {
+	var archivedAt *time.Time
+
+	SQL := `SELECT archived_at 
+              FROM user_session 
+              WHERE id = $1`
+
+	getErr := database.Todo.Get(&archivedAt, SQL, sessionID)
+	return archivedAt, getErr
+}
+
+func GetUser(userID string) (models.User, error) {
+	var user models.User
+	SQL := `SELECT id, name, email 
+              FROM users 
+              WHERE id = $1
+                AND archived_at IS NULL`
+
+	err := database.Todo.Get(&user, SQL, userID)
+	return user, err
 }

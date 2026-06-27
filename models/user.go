@@ -15,3 +15,14 @@ type LoginData struct {
 	ID           string `db:"id"`
 	PasswordHash string `db:"password"`
 }
+
+type UserCtx struct {
+	UserID    string `json:"userId"`
+	SessionID string `json:"sessionId"`
+}
+
+type User struct {
+	ID    string `json:"id" db:"id"`
+	Name  string `json:"name" db:"name"`
+	Email string `json:"email" db:"email"`
+}

@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/yourusername/my-project/database"
 	"github.com/yourusername/my-project/handlers"
+	"github.com/yourusername/my-project/middlewares"
 )
 
 func main() {
@@ -28,6 +29,14 @@ func main() {
 	router.Route("/v1", func(v1 chi.Router) {
 		v1.Post("/register", handlers.RegisterUser)
 		v1.Post("/login", handlers.LoginUser)
+
+		v1.Group(func(r chi.Router) {
+			r.Use(middlewares.Authenticate)
+
+			r.Route("/user", func(user chi.Router) {
+				user.Get("/", handlers.GetUser)
+			})
+		})
 
 	})
 

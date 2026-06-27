@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/yourusername/my-project/database/dbHelper"
+	"github.com/yourusername/my-project/middlewares"
 	"github.com/yourusername/my-project/models"
 	"github.com/yourusername/my-project/utils"
 )
@@ -77,4 +78,17 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		Message string `json:"message"`
 		Token   string `json:"token"`
 	}{"login successful", token})
+}
+
+func GetUser(w http.ResponseWriter, r *http.Request) {
+	userCtx := middlewares.UserContext(r)
+	userID := userCtx.UserID
+
+	user, err := dbHelper.GetUser(userID)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err, "failed to get user")
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, user)
 }
