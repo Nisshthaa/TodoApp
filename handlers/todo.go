@@ -95,3 +95,21 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request) {
 		Message: "Todo updated successfully",
 	})
 }
+
+func DeleteTodoByID(w http.ResponseWriter, r *http.Request) {
+
+	todoID := chi.URLParam(r, "todoId")
+	userCtx := middlewares.UserContext(r)
+	userID := userCtx.UserID
+
+	err := dbHelper.DeleteTodoByID(userID, todoID)
+
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err, "failed to delete todo")
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, struct {
+		Message string `json:"message"`
+	}{"todo deleted successfully"})
+}

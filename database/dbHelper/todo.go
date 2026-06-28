@@ -84,3 +84,14 @@ func UpdateTodo(userID, todoID string, body models.TodoRequest) error {
 
 	return err
 }
+
+func DeleteTodoByID(userID, todoID string) error {
+	SQL := `UPDATE todos
+			  SET archived_at = NOW()        
+			  WHERE id = $1                  
+			    AND user_id = $2             
+			    AND archived_at IS NULL`
+
+	_, err := database.Todo.Exec(SQL, todoID, userID)
+	return err
+}

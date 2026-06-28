@@ -45,6 +45,7 @@ func main() {
 				todo.Route("/{todoId}", func(todoIDRoute chi.Router) {
 					todoIDRoute.Put("/edit", handlers.UpdateTodo)
 					todoIDRoute.Put("/mark-completed", handlers.MarkCompleted)
+					todoIDRoute.Delete("/", handlers.DeleteTodoByID)
 				})
 			})
 
