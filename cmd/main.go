@@ -43,6 +43,7 @@ func main() {
 				todo.Get("/", handlers.GetAllTodos)
 
 				todo.Route("/{todoId}", func(todoIDRoute chi.Router) {
+					todoIDRoute.Put("/edit", handlers.UpdateTodo)
 					todoIDRoute.Put("/mark-completed", handlers.MarkCompleted)
 				})
 			})

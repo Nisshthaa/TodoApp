@@ -58,3 +58,29 @@ func MarkTodoAsCompleted(todoID, userID string) error {
 	_, err := database.Todo.Exec(SQL, todoID, userID)
 	return err
 }
+
+func UpdateTodo(userID, todoID string, body models.TodoRequest) error {
+
+	args := []interface{}{
+		body.Title,
+		body.Description,
+		todoID,
+		userID,
+	}
+
+	SQL := `
+		UPDATE todos
+		SET
+			title = TRIM($1),
+			description = TRIM($2),
+			updated_at = NOW()
+		WHERE
+			id = $3
+		  AND user_id=$4
+			AND archived_at IS NULL
+	`
+
+	_, err := database.Todo.Exec(SQL, args...)
+
+	return err
+}

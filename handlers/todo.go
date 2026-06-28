@@ -71,3 +71,27 @@ func MarkCompleted(w http.ResponseWriter, r *http.Request) {
 		Message string `json:"message"`
 	}{"todo marked as completed successfully"})
 }
+
+func UpdateTodo(w http.ResponseWriter, r *http.Request) {
+	todoID := chi.URLParam(r, "todoId")
+	userCtx := middlewares.UserContext(r)
+	userID := userCtx.UserID
+
+	var body models.TodoRequest
+
+	if err := utils.ParseBody(r, &body); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err, "Failed to parse request body")
+		return
+	}
+
+	if err := dbHelper.UpdateTodo(userID, todoID, body); err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err, "Failed to update todo")
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, struct {
+		Message string `json:"message"`
+	}{
+		Message: "Todo updated successfully",
+	})
+}
