@@ -41,6 +41,7 @@ func main() {
 			r.Route("/todo", func(todo chi.Router) {
 				todo.Post("/", handlers.CreateTodo)
 				todo.Get("/", handlers.GetAllTodos)
+				todo.Delete("/delete-all", handlers.DeleteAllTodos)
 
 				todo.Route("/{todoId}", func(todoIDRoute chi.Router) {
 					todoIDRoute.Put("/edit", handlers.UpdateTodo)

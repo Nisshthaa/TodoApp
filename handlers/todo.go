@@ -113,3 +113,18 @@ func DeleteTodoByID(w http.ResponseWriter, r *http.Request) {
 		Message string `json:"message"`
 	}{"todo deleted successfully"})
 }
+
+func DeleteAllTodos(w http.ResponseWriter, r *http.Request) {
+	userCtx := middlewares.UserContext(r)
+	userID := userCtx.UserID
+
+	err := dbHelper.DeleteAllTodos(userID)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err, "failed to delete todos")
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, struct {
+		Message string `json:"message"`
+	}{"all todos deleted successfully"})
+}
