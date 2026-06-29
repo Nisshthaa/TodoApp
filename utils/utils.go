@@ -12,10 +12,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type ErrorResponse struct {
-	Error   string `json:"error"`
-	Message string `json:"message,omitempty"`
-}
+//type ErrorResponse struct {
+//	Error   string `json:"error"`
+//	Message string `json:"message,omitempty"`
+//}
 
 func ParseBody(r *http.Request, v interface{}) error {
 	return json.NewDecoder(r.Body).Decode(v)
@@ -35,9 +35,14 @@ func RespondJSON(w http.ResponseWriter, statusCode int, body interface{}) {
 }
 
 func newClientError(err error, statusCode int, messageToUser string) *models.ClientError {
+	clientErr := ""
+	if err != nil {
+		clientErr = err.Error()
+	}
+
 	return &models.ClientError{
 		MessageToUser: messageToUser,
-		Err:           err.Error(),
+		Err:           clientErr,
 		StatusCode:    statusCode,
 	}
 }

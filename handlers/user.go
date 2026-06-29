@@ -51,14 +51,14 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, userErr := dbHelper.AuthenticateUser(body.Email, body.Password)
+	userID, userErr := dbHelper.AuthenticateUser(body.Email, body.Password) //change nane
 	if userErr != nil {
 		utils.RespondError(w, http.StatusInternalServerError, userErr, "failed to find user")
 		return
 	}
 
 	if userID == "" {
-		utils.RespondError(w, http.StatusOK, nil, "user not found")
+		utils.RespondError(w, http.StatusBadRequest, nil, "user not found")
 		return
 	}
 

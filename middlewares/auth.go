@@ -22,20 +22,21 @@ func Authenticate(next http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		tokenString := r.Header.Get("token")
-		if tokenString == "" {
+		apiKey := r.Header.Get("x-api-key")
+		if apiKey == "" {
 			utils.RespondError(w, http.StatusUnauthorized, nil, "token header missing")
 			return
 		}
 
-		token, parseErr := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.Parse(apiKey, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, errors.New("invalid signing ng method")
 			}
 			return []byte(os.Getenv("JWT_SECRET_KEY")), nil
 		})
-		if parseErr != nil || !token.Valid {
-			utils.RespondError(w, http.StatusUnauthorized, parseErr, "invalid token")
+		
+		if err != nil || !token.Valid {
+			utils.RespondError(w, http.StatusUnauthorized, err, "invalid token")
 			return
 		}
 
@@ -46,7 +47,6 @@ func Authenticate(next http.Handler) http.Handler {
 		}
 
 		sessionID := claimValues["sessionId"].(string)
-
 		archivedAt, err := dbHelper.GetArchivedAt(sessionID)
 		if err != nil {
 			utils.RespondError(w, http.StatusInternalServerError, err, "internal server error")
@@ -54,7 +54,7 @@ func Authenticate(next http.Handler) http.Handler {
 		}
 
 		if archivedAt != nil {
-			utils.RespondError(w, http.StatusUnauthorized, nil, "invalid token")
+			utils.RespondError(w, http.StatusUnauthorized, nil, "invalid token user already logged out")
 			return
 		}
 
@@ -70,8 +70,6 @@ func Authenticate(next http.Handler) http.Handler {
 }
 
 func UserContext(r *http.Request) *models.UserCtx {
-	if user, ok := r.Context().Value(userContext).(*models.UserCtx); ok {
-		return user
-	}
-	return nil
+	user := r.Context().Value(userContext).(*models.UserCtx)
+	return user
 }

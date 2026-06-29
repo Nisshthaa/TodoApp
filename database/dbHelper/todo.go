@@ -6,22 +6,20 @@ import (
 )
 
 func IsTodoExists(userID, title string) (bool, error) {
-
 	SQL := `SELECT COUNT(id) > 0
 		FROM todos
 		WHERE title = TRIM($1)
-		  AND user_id=$2
+		  AND user_id = $2
 		  AND archived_at IS NULL`
+
 	var exists bool
-
 	err := database.Todo.Get(&exists, SQL, title, userID)
-
 	return exists, err
 }
 
-func CreateTodo(body models.TodoRequest) error {
+func CreateTodo(body models.TodoRequest, userID string) error {
 	args := []interface{}{
-		body.UserID,
+		userID,
 		body.Title,
 		body.Description,
 	}
@@ -33,7 +31,7 @@ func CreateTodo(body models.TodoRequest) error {
 	return err
 }
 
-func GetAllTodos(userID, keyword, completed string) ([]models.Todo, error) {
+func GetAllTodos(userID, search, status string) ([]models.Todo, error) {
 	SQL := `SELECT id, user_id, title, description, is_completed
 				FROM todos
 				WHERE user_id = $1
@@ -44,7 +42,7 @@ func GetAllTodos(userID, keyword, completed string) ([]models.Todo, error) {
 				  AND archived_at IS NULL`
 
 	todos := make([]models.Todo, 0)
-	getErr := database.Todo.Select(&todos, SQL, userID, keyword, completed)
+	getErr := database.Todo.Select(&todos, SQL, userID, search, status)
 	return todos, getErr
 }
 

@@ -13,25 +13,26 @@ import (
 func CreateTodo(w http.ResponseWriter, r *http.Request) {
 	var todo models.TodoRequest
 	userCtx := middlewares.UserContext(r)
-	todo.UserID = userCtx.UserID
+	userID := userCtx.UserID
 
 	if err := utils.ParseBody(r, &todo); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err, "failed to parse body")
 		return
 	}
 
-	exists, err := dbHelper.IsTodoExists(todo.UserID, todo.Title)
+	exists, err := dbHelper.IsTodoExists(userID, todo.Title)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err, "failed to check todo existence")
 		return
 	}
+
 	if exists {
 		utils.RespondError(w, http.StatusBadRequest, nil, "todo already exists")
 		return
 	}
 
-	if err := dbHelper.CreateTodo(todo); err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err, "Failed to create todo")
+	if err := dbHelper.CreateTodo(todo, userID); err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err, "failed to create todo")
 		return
 	}
 
@@ -41,13 +42,13 @@ func CreateTodo(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAllTodos(w http.ResponseWriter, r *http.Request) {
-	keyword := r.URL.Query().Get("keyword")
-	completed := r.URL.Query().Get("completed")
+	search := r.URL.Query().Get("search")
+	status := r.URL.Query().Get("status")
 
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
 
-	todos, getErr := dbHelper.GetAllTodos(userID, keyword, completed)
+	todos, getErr := dbHelper.GetAllTodos(userID, search, status)
 	if getErr != nil {
 		utils.RespondError(w, http.StatusInternalServerError, getErr, "failed to get todos")
 		return
@@ -58,7 +59,6 @@ func GetAllTodos(w http.ResponseWriter, r *http.Request) {
 
 func MarkCompleted(w http.ResponseWriter, r *http.Request) {
 	todoID := chi.URLParam(r, "todoId")
-
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
 
@@ -97,13 +97,11 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteTodoByID(w http.ResponseWriter, r *http.Request) {
-
 	todoID := chi.URLParam(r, "todoId")
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
 
 	err := dbHelper.DeleteTodoByID(userID, todoID)
-
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err, "failed to delete todo")
 		return

@@ -1,63 +1,45 @@
 package main
 
 import (
-	"log"
+	"errors"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/sirupsen/logrus"
 	"github.com/yourusername/my-project/database"
-	"github.com/yourusername/my-project/handlers"
-	"github.com/yourusername/my-project/middlewares"
+	"github.com/yourusername/my-project/server"
 )
 
 func main() {
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	srv := server.SetUpRoutes()
+
 	if err := database.OpenConnection(
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_PORT"),
-		os.Getenv("DB_NAME"),
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
-	); err != nil {
-		log.Panicf("Failed to initialize and migrate database with error: %v", err)
+		os.Getenv("DB_NAME")); err != nil {
+		logrus.Panicf("Failed to initialize and migrate database with error: %+v", err)
 	}
+	logrus.Print("migration successful!!")
 
-	defer database.Todo.Close()
+	go func() {
+		if err := srv.Run(":8080"); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logrus.Panicf("Failed to run server with error: %+v", err)
 
-	router := chi.NewRouter()
+		}
+	}()
+	logrus.Print("Server started at :8080")
 
-	router.Route("/v1", func(v1 chi.Router) {
-		v1.Post("/register", handlers.RegisterUser)
-		v1.Post("/login", handlers.LoginUser)
+	<-done
 
-		v1.Group(func(r chi.Router) {
-			r.Use(middlewares.Authenticate)
-
-			r.Route("/user", func(user chi.Router) {
-				user.Get("/", handlers.GetUser)
-				user.Post("/logout", handlers.LogoutUser)
-			})
-
-			r.Route("/todo", func(todo chi.Router) {
-				todo.Post("/", handlers.CreateTodo)
-				todo.Get("/", handlers.GetAllTodos)
-				todo.Delete("/delete-all", handlers.DeleteAllTodos)
-
-				todo.Route("/{todoId}", func(todoIDRoute chi.Router) {
-					todoIDRoute.Put("/edit", handlers.UpdateTodo)
-					todoIDRoute.Put("/mark-completed", handlers.MarkCompleted)
-					todoIDRoute.Delete("/", handlers.DeleteTodoByID)
-				})
-			})
-
-		})
-
-	})
-
-	if err := http.ListenAndServe(":8080", router); err != nil {
-		log.Panicf("Failed to start server with error: %v", err)
-
+	logrus.Info("shutting down server")
+	if err := database.ShutdownDatabase(); err != nil {
+		logrus.WithError(err).Error("failed to close database connection")
 	}
-	log.Println("Server started at :8080")
 
 }
