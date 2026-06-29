@@ -3,6 +3,7 @@ package dbHelper
 import (
 	"time"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/yourusername/my-project/database"
 	"github.com/yourusername/my-project/models"
 	"github.com/yourusername/my-project/utils"
@@ -80,5 +81,25 @@ func DeleteUserSession(sessionID string) error {
 			    AND archived_at IS NULL`
 
 	_, err := database.Todo.Exec(SQL, sessionID)
+	return err
+}
+
+func DeleteUserSessionTX(tx *sqlx.Tx, sessionID string) error {
+	SQL := `UPDATE user_session
+			  SET archived_at = NOW()
+			  WHERE id = $1
+			    AND archived_at IS NULL`
+
+	_, err := tx.Exec(SQL, sessionID)
+	return err
+}
+
+func DeleteUser(tx *sqlx.Tx, userID string) error {
+	SQL := `UPDATE users
+			  SET archived_at = NOW()
+			  WHERE id = $1
+			    AND archived_at IS NULL`
+
+	_, err := tx.Exec(SQL, userID)
 	return err
 }

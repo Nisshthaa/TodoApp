@@ -3,6 +3,8 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/jmoiron/sqlx"
+	"github.com/yourusername/my-project/database"
 	"github.com/yourusername/my-project/database/dbHelper"
 	"github.com/yourusername/my-project/middlewares"
 	"github.com/yourusername/my-project/models"
@@ -105,4 +107,27 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, struct {
 		Message string `json:"message"`
 	}{"logout successful"})
+}
+
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	userCtx := middlewares.UserContext(r)
+	userID := userCtx.UserID
+	sessionID := userCtx.SessionID
+
+	err := database.Tx(func(tx *sqlx.Tx) error {
+		err := dbHelper.DeleteUser(tx, userID)
+		if err != nil {
+			return err
+		}
+
+		return dbHelper.DeleteUserSessionTX(tx, sessionID)
+	})
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err, "failed to delete user account")
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, struct {
+		Message string `json:"message"`
+	}{"account deleted successfully"})
 }

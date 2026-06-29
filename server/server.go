@@ -26,6 +26,7 @@ func SetUpRoutes() *Server {
 			r.Route("/user", func(user chi.Router) {
 				user.Get("/me", handlers.GetUser)
 				user.Post("/logout", handlers.LogoutUser)
+				user.Delete("/delete", handlers.DeleteUser)
 			})
 
 			r.Route("/todo", func(todo chi.Router) {
