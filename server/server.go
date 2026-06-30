@@ -1,7 +1,9 @@
 package server
 
 import (
+	"context"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/yourusername/my-project/handlers"
@@ -12,6 +14,12 @@ type Server struct {
 	chi.Router
 	server *http.Server
 }
+
+const (
+	readTimeout       = 5 * time.Minute
+	readHeaderTimeout = 30 * time.Second
+	writeTimeout      = 5 * time.Minute
+)
 
 func SetUpRoutes() *Server {
 	router := chi.NewRouter()
@@ -51,8 +59,17 @@ func SetUpRoutes() *Server {
 
 func (svc *Server) Run(port string) error {
 	svc.server = &http.Server{
-		Addr:    port,
-		Handler: svc.Router,
+		Addr:              port,
+		Handler:           svc.Router,
+		ReadTimeout:       readTimeout,
+		ReadHeaderTimeout: readHeaderTimeout,
+		WriteTimeout:      writeTimeout,
 	}
 	return svc.server.ListenAndServe()
+}
+
+func (svc *Server) Shutdown(timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	return svc.server.Shutdown(ctx)
 }

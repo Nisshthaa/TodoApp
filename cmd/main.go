@@ -6,11 +6,14 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/yourusername/my-project/database"
 	"github.com/yourusername/my-project/server"
 )
+
+const shutDownTimeOut = 10 * time.Second
 
 func main() {
 	done := make(chan os.Signal, 1)
@@ -38,8 +41,13 @@ func main() {
 	<-done
 
 	logrus.Info("shutting down server")
+	
 	if err := database.ShutdownDatabase(); err != nil {
 		logrus.WithError(err).Error("failed to close database connection")
+	}
+
+	if err := srv.Shutdown(shutDownTimeOut); err != nil {
+		logrus.WithError(err).Panic("failed to gracefully shutdown server")
 	}
 
 }
