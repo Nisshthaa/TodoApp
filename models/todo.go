@@ -1,8 +1,8 @@
 package models
 
 type TodoRequest struct {
-	Title       string `db:"title" json:"title" validate:"title"`
-	Description string `db:"description" json:"description" validate:"description"`
+	Title       string `db:"title" json:"title"`
+	Description string `db:"description" json:"description"`
 }
 
 type Todo struct {

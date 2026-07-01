@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type RegisterRequest struct {
 	Name     string `json:"name" validate:"required"`
 	Email    string `json:"email" validate:"email"`
@@ -22,7 +24,8 @@ type UserCtx struct {
 }
 
 type User struct {
-	ID    string `json:"id" db:"id"`
-	Name  string `json:"name" db:"name"`
-	Email string `json:"email" db:"email"`
+	UserID    string    `json:"id" db:"id"`
+	Name      string    `json:"name" db:"name"`
+	Email     string    `json:"email" db:"email"`
+	CreatedAt time.Time `json:"createdAt" db:"created_at"`
 }

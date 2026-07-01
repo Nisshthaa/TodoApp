@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
+	"github.com/yourusername/my-project/database"
 	"github.com/yourusername/my-project/database/dbHelper"
 	"github.com/yourusername/my-project/middlewares"
 	"github.com/yourusername/my-project/models"
@@ -134,7 +135,7 @@ func DeleteAllTodos(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
 
-	err := dbHelper.DeleteAllTodos(userID)
+	err := dbHelper.DeleteAllTodos(database.Todo, userID)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err, "failed to delete todos")
 		return

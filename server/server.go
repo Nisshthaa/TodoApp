@@ -29,7 +29,7 @@ func SetUpRoutes() *Server {
 		v1.Post("/login", handlers.LoginUser)
 
 		v1.Group(func(r chi.Router) {
-			r.Use(middlewares.Authenticate)
+			r.Use(middlewares.AuthMiddleware)
 
 			r.Route("/user", func(user chi.Router) {
 				user.Get("/me", handlers.GetUser)

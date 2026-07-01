@@ -1,7 +1,7 @@
 package dbHelper
 
 import (
-	"time"
+	"database/sql"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/yourusername/my-project/database"
@@ -57,45 +57,32 @@ func GetUserIDByPassword(email, password string) (string, error) {
 	return user.ID, nil
 }
 
-func GetArchivedAt(sessionID string) (*time.Time, error) {
-	var archivedAt *time.Time
+func GetUserBySession(sessionToken string) (*models.User, error) {
+	SQL := `SELECT u.id, u.name, u.email, u.created_at 
+			FROM users u
+			JOIN user_session us on u.id = us.user_id
+			WHERE u.archived_at IS NULL AND us.session_token = $1`
 
-	SQL := `SELECT archived_at 
-              FROM user_session 
-              WHERE id = $1`
-
-	getErr := database.Todo.Get(&archivedAt, SQL, sessionID)
-	return archivedAt, getErr
-}
-
-func GetUser(userID string) (models.User, error) {
 	var user models.User
-	SQL := `SELECT id, name, email 
-              FROM users 
-              WHERE id = $1
-                AND archived_at IS NULL`
+	err := database.Todo.Get(&user, SQL, sessionToken)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
 
-	err := database.Todo.Get(&user, SQL, userID)
-	return user, err
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return &user, nil
 }
 
-func DeleteUserSession(sessionID string) error {
+func DeleteUserSessionToken(db sqlx.Ext, userID, token string) error {
+
 	SQL := `UPDATE user_session
-			  SET archived_at = NOW()
-			  WHERE id = $1
-			    AND archived_at IS NULL`
-
-	_, err := database.Todo.Exec(SQL, sessionID)
-	return err
-}
-
-func DeleteUserSessionTX(tx *sqlx.Tx, sessionID string) error {
-	SQL := `UPDATE user_session
-			  SET archived_at = NOW()
-			  WHERE id = $1
-			    AND archived_at IS NULL`
-
-	_, err := tx.Exec(SQL, sessionID)
+			SET archived_at = NOW()
+			WHERE user_id = $1
+			  AND session_token = $2
+			  AND archived_at IS NULL`
+	_, err := db.Exec(SQL, userID, token)
 	return err
 }
 

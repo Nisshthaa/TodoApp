@@ -1,6 +1,7 @@
 package dbHelper
 
 import (
+	"github.com/jmoiron/sqlx"
 	"github.com/yourusername/my-project/database"
 	"github.com/yourusername/my-project/models"
 )
@@ -96,12 +97,12 @@ func DeleteTodoByID(userID, todoID string) error {
 	return err
 }
 
-func DeleteAllTodos(userID string) error {
+func DeleteAllTodos(db sqlx.Ext, userID string) error {
 	SQL := `UPDATE todos
               SET archived_at = NOW()        
               WHERE user_id = $1             
                 AND archived_at IS NULL`
 
-	_, err := database.Todo.Exec(SQL, userID)
+	_, err := db.Exec(SQL, userID)
 	return err
 }

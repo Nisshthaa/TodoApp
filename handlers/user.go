@@ -114,43 +114,42 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.UserContext(r)
-	userID := userCtx.UserID
-
-	user, err := dbHelper.GetUser(userID)
-	if err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err, "failed to get user")
-		return
-	}
-
-	utils.RespondJSON(w, http.StatusOK, user)
+	utils.RespondJSON(w, http.StatusOK, userCtx)
 }
 
 func LogoutUser(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("x-api-key")
 	userCtx := middlewares.UserContext(r)
-	sessionID := userCtx.SessionID
 
-	if err := dbHelper.DeleteUserSession(sessionID); err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err, "failed to delete user session")
+	err := dbHelper.DeleteUserSessionToken(database.Todo, userCtx.UserID, token)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err, "failed to logout user")
 		return
 	}
 
 	utils.RespondJSON(w, http.StatusOK, struct {
 		Message string `json:"message"`
-	}{"logout successful"})
+	}{"account logout successfully"})
 }
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
-	sessionID := userCtx.SessionID
+	token := r.Header.Get("x-api-key")
 
 	err := database.Tx(func(tx *sqlx.Tx) error {
-		err := dbHelper.DeleteUser(tx, userID)
+
+		err := dbHelper.DeleteAllTodos(tx, userID)
 		if err != nil {
 			return err
 		}
 
-		return dbHelper.DeleteUserSessionTX(tx, sessionID)
+		err = dbHelper.DeleteUser(tx, userID)
+		if err != nil {
+			return err
+		}
+
+		return dbHelper.DeleteUserSessionToken(tx, userID, token)
 	})
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err, "failed to delete user account")
