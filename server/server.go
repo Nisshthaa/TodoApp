@@ -43,9 +43,10 @@ func SetUpRoutes() *Server {
 				todo.Delete("/delete-all", handlers.DeleteAllTodos)
 
 				todo.Route("/{todoId}", func(todoIDRoute chi.Router) {
+					todoIDRoute.Get("/", handlers.GetTodoByID)
 					todoIDRoute.Put("/edit", handlers.UpdateTodo)
 					todoIDRoute.Put("/mark-completed", handlers.MarkCompleted)
-					todoIDRoute.Delete("/", handlers.DeleteTodoByID)
+					todoIDRoute.Delete("/delete", handlers.DeleteTodoByID)
 				})
 			})
 

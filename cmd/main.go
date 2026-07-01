@@ -18,6 +18,7 @@ const shutDownTimeOut = 10 * time.Second
 func main() {
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
 	srv := server.SetUpRoutes()
 
 	if err := database.OpenConnection(
@@ -41,7 +42,7 @@ func main() {
 	<-done
 
 	logrus.Info("shutting down server")
-	
+
 	if err := database.ShutdownDatabase(); err != nil {
 		logrus.WithError(err).Error("failed to close database connection")
 	}

@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/sha512"
+	"encoding/hex"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -11,11 +13,6 @@ import (
 	"github.com/yourusername/my-project/models"
 	"golang.org/x/crypto/bcrypt"
 )
-
-//type ErrorResponse struct {
-//	Error   string `json:"error"`
-//	Message string `json:"message,omitempty"`
-//}
 
 func ParseBody(r *http.Request, v interface{}) error {
 	return json.NewDecoder(r.Body).Decode(v)
@@ -29,7 +26,7 @@ func RespondJSON(w http.ResponseWriter, statusCode int, body interface{}) {
 	w.WriteHeader(statusCode)
 	if body != nil {
 		if err := EncodeJSONBody(w, body); err != nil {
-			log.Printf("Failed to respond JSON with error: %+v", err)
+			log.Printf("failed to respond JSON with error: %+v", err)
 		}
 	}
 }
@@ -54,6 +51,12 @@ func RespondError(w http.ResponseWriter, statusCode int, err error, messageToUse
 	if err := json.NewEncoder(w).Encode(clientError); err != nil {
 		log.Printf("status: %d, message: %s, err: %+v ", statusCode, messageToUser, err)
 	}
+}
+
+func HashString(toHash string) string {
+	sha := sha512.New()
+	sha.Write([]byte(toHash))
+	return hex.EncodeToString(sha.Sum(nil))
 }
 
 func HashPassword(password string) (string, error) {

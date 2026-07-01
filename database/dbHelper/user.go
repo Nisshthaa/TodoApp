@@ -20,22 +20,27 @@ func IsUserExists(email string) (bool, error) {
 	return exist, err
 }
 
-func CreateUser(name, email, password string) error {
-	SQL := `INSERT INTO users(name,email,password)
-			VALUES (TRIM($1),TRIM($2),$3)`
-	_, err := database.Todo.Exec(SQL, name, email, password)
+func CreateUser(db sqlx.Ext, name, email, password string) (string, error) {
+
+	SQL := `INSERT INTO users(name, email, password) VALUES ($1, TRIM(LOWER($2)), $3) RETURNING id`
+	var userID string
+	if err := db.QueryRowx(SQL, name, email, password).Scan(&userID); err != nil {
+		return "", err
+	}
+
+	return userID, nil
+}
+
+func CreateUserSession(db sqlx.Ext, userID, sessionToken string) error {
+
+	SQL := `INSERT INTO user_session(user_id,session_token) 
+              VALUES ($1,$2) `
+	_, err := db.Exec(SQL, userID, sessionToken)
 	return err
+
 }
 
-func CreateUserSession(userID string) (string, error) {
-	var sessionID string
-	SQL := `INSERT INTO user_session(user_id) 
-              VALUES ($1) RETURNING id`
-	err := database.Todo.Get(&sessionID, SQL, userID)
-	return sessionID, err
-}
-
-func AuthenticateUser(email, password string) (string, error) {
+func GetUserIDByPassword(email, password string) (string, error) {
 	SQL := `SELECT id,
        			   password
 			  FROM users 

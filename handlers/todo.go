@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator/v10"
 	"github.com/yourusername/my-project/database/dbHelper"
 	"github.com/yourusername/my-project/middlewares"
 	"github.com/yourusername/my-project/models"
@@ -17,6 +18,12 @@ func CreateTodo(w http.ResponseWriter, r *http.Request) {
 
 	if err := utils.ParseBody(r, &todo); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err, "failed to parse body")
+		return
+	}
+
+	v := validator.New()
+	if err := v.Struct(todo); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err, "input validation failed")
 		return
 	}
 
@@ -42,15 +49,26 @@ func CreateTodo(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAllTodos(w http.ResponseWriter, r *http.Request) {
-	search := r.URL.Query().Get("search")
-	status := r.URL.Query().Get("status")
-
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
 
-	todos, getErr := dbHelper.GetAllTodos(userID, search, status)
-	if getErr != nil {
-		utils.RespondError(w, http.StatusInternalServerError, getErr, "failed to get todos")
+	todos, err := dbHelper.GetAllTodos(userID)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err, "failed to get todos")
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, todos)
+}
+
+func GetTodoByID(w http.ResponseWriter, r *http.Request) {
+	userCtx := middlewares.UserContext(r)
+	userID := userCtx.UserID
+	todoID := chi.URLParam(r, "todoId")
+
+	todos, err := dbHelper.GetTodoByID(userID, todoID)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err, "failed to get todos")
 		return
 	}
 

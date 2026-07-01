@@ -18,32 +18,34 @@ func IsTodoExists(userID, title string) (bool, error) {
 }
 
 func CreateTodo(body models.TodoRequest, userID string) error {
-	args := []interface{}{
-		userID,
-		body.Title,
-		body.Description,
-	}
-
 	SQL := `INSERT INTO todos(user_id,title,description)
 	     VALUES ($1,TRIM($2),TRIM($3))`
 
-	_, err := database.Todo.Exec(SQL, args...)
+	_, err := database.Todo.Exec(SQL, userID, body.Title, body.Description)
 	return err
 }
 
-func GetAllTodos(userID, search, status string) ([]models.Todo, error) {
+func GetAllTodos(userID string) ([]models.Todo, error) {
 	SQL := `SELECT id, user_id, title, description, is_completed
 				FROM todos
 				WHERE user_id = $1
-				  AND (
-					$2 = '' OR (title ILIKE '%' || $2 || '%' OR description ILIKE '%' || $2 || '%')
-					)
-				  AND ($3 = '' OR is_completed = CAST($3 AS BOOLEAN))
 				  AND archived_at IS NULL`
 
 	todos := make([]models.Todo, 0)
-	getErr := database.Todo.Select(&todos, SQL, userID, search, status)
-	return todos, getErr
+	err := database.Todo.Select(&todos, SQL, userID)
+	return todos, err
+}
+
+func GetTodoByID(userID, todoID string) ([]models.Todo, error) {
+	SQL := `SELECT id, user_id, title, description, is_completed
+				FROM todos
+				WHERE user_id = $1
+				  AND id = $2
+				  AND archived_at IS NULL`
+
+	todo := make([]models.Todo, 0)
+	err := database.Todo.Get(&todo, SQL, userID, todoID)
+	return todo, err
 }
 
 func MarkTodoAsCompleted(todoID, userID string) error {
