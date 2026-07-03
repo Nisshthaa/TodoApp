@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -17,8 +18,8 @@ func CreateTodo(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
 
-	if err := utils.ParseBody(r, &todo); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, err, "failed to parse body")
+	if parseErr := utils.ParseBody(r, &todo); parseErr != nil {
+		utils.RespondError(w, http.StatusBadRequest, parseErr, "failed to parse body")
 		return
 	}
 
@@ -28,9 +29,9 @@ func CreateTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	exists, err := dbHelper.IsTodoExists(userID, todo.Title)
-	if err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err, "failed to check todo existence")
+	exists, existErr := dbHelper.IsTodoExists(userID, todo.Title)
+	if existErr != nil {
+		utils.RespondError(w, http.StatusInternalServerError, existErr, "failed to check todo existence")
 		return
 	}
 
@@ -39,8 +40,8 @@ func CreateTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := dbHelper.CreateTodo(todo, userID); err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err, "failed to create todo")
+	if createError := dbHelper.CreateTodo(todo, userID); createError != nil {
+		utils.RespondError(w, http.StatusInternalServerError, createError, "failed to create todo")
 		return
 	}
 
@@ -53,9 +54,9 @@ func GetAllTodos(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
 
-	todos, err := dbHelper.GetAllTodos(userID)
-	if err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err, "failed to get todos")
+	todos, getErr := dbHelper.GetAllTodos(userID)
+	if getErr != nil {
+		utils.RespondError(w, http.StatusInternalServerError, getErr, "failed to get todos")
 		return
 	}
 
@@ -67,22 +68,24 @@ func GetTodoByID(w http.ResponseWriter, r *http.Request) {
 	userID := userCtx.UserID
 	todoID := chi.URLParam(r, "todoId")
 
-	todos, err := dbHelper.GetTodoByID(userID, todoID)
-	if err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err, "failed to get todos")
+	todo, getErr := dbHelper.GetTodoByID(userID, todoID)
+	log.Println(todo)
+
+	if getErr != nil {
+		utils.RespondError(w, http.StatusInternalServerError, getErr, "failed to get todos")
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, todos)
+	utils.RespondJSON(w, http.StatusOK, todo)
 }
 
-func MarkCompleted(w http.ResponseWriter, r *http.Request) {
+func MarkStatusCompleted(w http.ResponseWriter, r *http.Request) {
 	todoID := chi.URLParam(r, "todoId")
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
 
-	if err := dbHelper.MarkTodoAsCompleted(todoID, userID); err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err, "failed to mark todo as completed")
+	if markErr := dbHelper.MarkStatusCompleted(todoID, userID); markErr != nil {
+		utils.RespondError(w, http.StatusInternalServerError, markErr, "failed to mark todo as completed")
 		return
 	}
 
@@ -98,13 +101,13 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request) {
 
 	var body models.TodoRequest
 
-	if err := utils.ParseBody(r, &body); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, err, "Failed to parse request body")
+	if parseErr := utils.ParseBody(r, &body); parseErr != nil {
+		utils.RespondError(w, http.StatusBadRequest, parseErr, "Failed to parse request body")
 		return
 	}
 
-	if err := dbHelper.UpdateTodo(userID, todoID, body); err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err, "Failed to update todo")
+	if updateErr := dbHelper.UpdateTodo(userID, todoID, body); updateErr != nil {
+		utils.RespondError(w, http.StatusInternalServerError, updateErr, "Failed to update todo")
 		return
 	}
 
@@ -120,9 +123,9 @@ func DeleteTodoByID(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
 
-	err := dbHelper.DeleteTodoByID(userID, todoID)
-	if err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err, "failed to delete todo")
+	deleteErr := dbHelper.DeleteTodoByID(userID, todoID)
+	if deleteErr != nil {
+		utils.RespondError(w, http.StatusInternalServerError, deleteErr, "failed to delete todo")
 		return
 	}
 
@@ -135,9 +138,9 @@ func DeleteAllTodos(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
 
-	err := dbHelper.DeleteAllTodos(database.Todo, userID)
-	if err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err, "failed to delete todos")
+	deleteErr := dbHelper.DeleteAllTodos(database.Todo, userID)
+	if deleteErr != nil {
+		utils.RespondError(w, http.StatusInternalServerError, deleteErr, "failed to delete todos")
 		return
 	}
 

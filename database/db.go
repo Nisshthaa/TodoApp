@@ -14,7 +14,7 @@ import (
 
 var Todo *sqlx.DB
 
-func OpenConnection(host, port, user, password, databaseName string) error {
+func Connect(host, port, user, password, databaseName string) error {
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		host,
 		port,

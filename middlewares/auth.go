@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/yourusername/my-project/database/dbHelper"
 	"github.com/yourusername/my-project/models"
+	"github.com/yourusername/my-project/utils"
 )
 
 type ContextKeys string
@@ -22,8 +23,14 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		user, err := dbHelper.GetUserBySession(apiKey)
 		if err != nil || user == nil {
-			logrus.WithError(err).Errorf("failed to get user with token: %s", apiKey)
-			w.WriteHeader(http.StatusUnauthorized)
+			logrus.WithError(err).Error("failed to get user by session")
+
+			utils.RespondError(
+				w,
+				http.StatusUnauthorized,
+				nil,
+				"invalid or expired api key",
+			)
 			return
 		}
 

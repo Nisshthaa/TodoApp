@@ -32,7 +32,7 @@ func SetUpRoutes() *Server {
 			r.Use(middlewares.AuthMiddleware)
 
 			r.Route("/user", func(user chi.Router) {
-				user.Get("/me", handlers.GetUser)
+				user.Get("/profile", handlers.GetUser)
 				user.Post("/logout", handlers.LogoutUser)
 				user.Delete("/delete", handlers.DeleteUser)
 			})
@@ -45,7 +45,7 @@ func SetUpRoutes() *Server {
 				todo.Route("/{todoId}", func(todoIDRoute chi.Router) {
 					todoIDRoute.Get("/", handlers.GetTodoByID)
 					todoIDRoute.Put("/edit", handlers.UpdateTodo)
-					todoIDRoute.Put("/mark-completed", handlers.MarkCompleted)
+					todoIDRoute.Put("/mark-completed", handlers.MarkStatusCompleted)
 					todoIDRoute.Delete("/delete", handlers.DeleteTodoByID)
 				})
 			})

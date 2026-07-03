@@ -7,6 +7,7 @@ type TodoRequest struct {
 
 type Todo struct {
 	ID          string `json:"id" db:"id"`
+	UserID      string `json:"userID" db:"user_id"`
 	Title       string `json:"title" db:"title"`
 	Description string `json:"description" db:"description"`
 	IsCompleted bool   `json:"isCompleted" db:"is_completed"`

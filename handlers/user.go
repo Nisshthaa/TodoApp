@@ -15,9 +15,8 @@ import (
 
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	var body models.RegisterRequest
-
-	if err := utils.ParseBody(r, &body); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, err, "failed to parse request body")
+	if parseErr := utils.ParseBody(r, &body); parseErr != nil {
+		utils.RespondError(w, http.StatusBadRequest, parseErr, "failed to parse request body")
 		return
 	}
 
@@ -27,9 +26,9 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	exists, err := dbHelper.IsUserExists(body.Email)
-	if err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err, "failed to check user existence")
+	exists, existErr := dbHelper.IsUserExists(body.Email)
+	if existErr != nil {
+		utils.RespondError(w, http.StatusInternalServerError, existErr, "failed to check user existence")
 		return
 	}
 
@@ -38,13 +37,14 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashedPassword, err := utils.HashPassword(body.Password)
-	if err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err, "failed to secure password")
+	hashedPassword, hashErr := utils.HashPassword(body.Password)
+	if hashErr != nil {
+		utils.RespondError(w, http.StatusInternalServerError, hashErr, "failed to secure password")
 		return
 	}
 
 	sessionToken := utils.HashString(body.Email + time.Now().String())
+
 	txErr := database.Tx(func(tx *sqlx.Tx) error {
 		userID, saveErr := dbHelper.CreateUser(tx, body.Name, body.Email, hashedPassword)
 		if saveErr != nil {
@@ -75,8 +75,8 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 func LoginUser(w http.ResponseWriter, r *http.Request) {
 	var body models.LoginRequest
 
-	if err := utils.ParseBody(r, &body); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, err, "failed to parse request body")
+	if parseErr := utils.ParseBody(r, &body); parseErr != nil {
+		utils.RespondError(w, http.StatusBadRequest, parseErr, "failed to parse request body")
 		return
 	}
 
@@ -86,9 +86,9 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, err := dbHelper.GetUserIDByPassword(body.Email, body.Password)
-	if err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err, "failed to find user")
+	userID, userErr := dbHelper.GetUserIDByPassword(body.Email, body.Password)
+	if userErr != nil {
+		utils.RespondError(w, http.StatusInternalServerError, userErr, "failed to find user")
 		return
 	}
 
@@ -103,6 +103,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		utils.RespondError(w, http.StatusInternalServerError, sessionErr, "failed to create user session")
 		return
 	}
+
 	utils.RespondJSON(w, http.StatusCreated, struct {
 		Message string `json:"message"`
 		Token   string `json:"token"`
@@ -137,7 +138,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userID := userCtx.UserID
 	token := r.Header.Get("x-api-key")
 
-	err := database.Tx(func(tx *sqlx.Tx) error {
+	txErr := database.Tx(func(tx *sqlx.Tx) error {
 
 		err := dbHelper.DeleteAllTodos(tx, userID)
 		if err != nil {
@@ -151,8 +152,8 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 		return dbHelper.DeleteUserSessionToken(tx, userID, token)
 	})
-	if err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err, "failed to delete user account")
+	if txErr != nil {
+		utils.RespondError(w, http.StatusInternalServerError, txErr, "failed to delete user account")
 		return
 	}
 

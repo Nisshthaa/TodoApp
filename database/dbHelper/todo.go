@@ -37,19 +37,19 @@ func GetAllTodos(userID string) ([]models.Todo, error) {
 	return todos, err
 }
 
-func GetTodoByID(userID, todoID string) ([]models.Todo, error) {
+func GetTodoByID(userID, todoID string) (*models.Todo, error) {
 	SQL := `SELECT id, user_id, title, description, is_completed
 				FROM todos
 				WHERE user_id = $1
 				  AND id = $2
 				  AND archived_at IS NULL`
 
-	todo := make([]models.Todo, 0)
+	var todo models.Todo
 	err := database.Todo.Get(&todo, SQL, userID, todoID)
-	return todo, err
+	return &todo, err
 }
 
-func MarkTodoAsCompleted(todoID, userID string) error {
+func MarkStatusCompleted(todoID, userID string) error {
 	SQL := `UPDATE todos	
               SET is_completed = true        
               WHERE id = $1                  

@@ -21,34 +21,34 @@ func main() {
 
 	srv := server.SetUpRoutes()
 
-	if err := database.OpenConnection(
+	if err := database.Connect(
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_PORT"),
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_NAME")); err != nil {
-		logrus.Panicf("Failed to initialize and migrate database with error: %+v", err)
+		logrus.Panicf("failed to initialize and migrate database with error: %+v", err)
 	}
 	logrus.Print("migration successful!!")
 
 	go func() {
-		if err := srv.Run(":8080"); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logrus.Panicf("Failed to run server with error: %+v", err)
+		if serverErr := srv.Run(":8080"); serverErr != nil && !errors.Is(serverErr, http.ErrServerClosed) {
+			logrus.Panicf("Failed to run server with error: %+v", serverErr)
 
 		}
 	}()
-	logrus.Print("Server started at :8080")
+	logrus.Print("server started at :8080")
 
 	<-done
 
 	logrus.Info("shutting down server")
 
-	if err := database.ShutdownDatabase(); err != nil {
-		logrus.WithError(err).Error("failed to close database connection")
+	if dbCloseErr := database.ShutdownDatabase(); dbCloseErr != nil {
+		logrus.WithError(dbCloseErr).Error("failed to close database connection")
 	}
 
-	if err := srv.Shutdown(shutDownTimeOut); err != nil {
-		logrus.WithError(err).Panic("failed to gracefully shutdown server")
+	if serverCloseErr := srv.Shutdown(shutDownTimeOut); serverCloseErr != nil {
+		logrus.WithError(serverCloseErr).Panic("failed to gracefully shutdown server")
 	}
 
 }
