@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -69,8 +68,6 @@ func GetTodoByID(w http.ResponseWriter, r *http.Request) {
 	todoID := chi.URLParam(r, "todoId")
 
 	todo, getErr := dbHelper.GetTodoByID(userID, todoID)
-	log.Println(todo)
-
 	if getErr != nil {
 		utils.RespondError(w, http.StatusInternalServerError, getErr, "failed to get todos")
 		return
@@ -102,12 +99,12 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request) {
 	var body models.TodoRequest
 
 	if parseErr := utils.ParseBody(r, &body); parseErr != nil {
-		utils.RespondError(w, http.StatusBadRequest, parseErr, "Failed to parse request body")
+		utils.RespondError(w, http.StatusBadRequest, parseErr, "failed to parse request body")
 		return
 	}
 
 	if updateErr := dbHelper.UpdateTodo(userID, todoID, body); updateErr != nil {
-		utils.RespondError(w, http.StatusInternalServerError, updateErr, "Failed to update todo")
+		utils.RespondError(w, http.StatusInternalServerError, updateErr, "failed to update todo")
 		return
 	}
 

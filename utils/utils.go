@@ -6,10 +6,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"os"
-	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/yourusername/my-project/models"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -66,15 +63,4 @@ func HashPassword(password string) (string, error) {
 
 func CheckPassword(password, hashedPassword string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-}
-
-func GenerateJWT(userID, sessionID string) (string, error) {
-	claims := jwt.MapClaims{
-		"userId":    userID,
-		"sessionId": sessionID,
-		"exp":       time.Now().Add(time.Hour * 24).Unix(),
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
 }
